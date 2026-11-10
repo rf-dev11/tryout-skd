@@ -29,8 +29,14 @@ export async function GET() {
       jumlah_latihan: ts.filter((t) => t.class_id === p.id && t.kind === 'latihan').length,
       jumlah_bacaan: ms.filter((m) => m.class_id === p.id).length,
     }));
-    // Paket dapat diubah admin kapan saja; jangan sajikan salinan cache lama.
-    return NextResponse.json(list, { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate' } });
+    // Browser: selalu ambil baru. CDN Vercel: boleh pakai salinan 10 detik, supaya banyak pengunjung beranda
+    // hanya memicu satu pembacaan database per 10 detik. Perubahan admin terlihat paling lambat ~10 detik.
+    return NextResponse.json(list, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Vercel-CDN-Cache-Control': 'max-age=10',
+      },
+    });
   } catch (e) {
     return NextResponse.json({ error: e.message || 'Gagal memuat paket' }, { status: 500 });
   }

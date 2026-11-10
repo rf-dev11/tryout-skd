@@ -1,6 +1,5 @@
 'use client';
 import { useEffect, useState } from 'react';
-import Shell from '@/components/Shell';
 import { api } from '@/lib/api';
 import { useMe } from '@/lib/useMe';
 import { SKD } from '@/lib/config';
@@ -14,13 +13,11 @@ export default function Ranking() {
   const [d, setD] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const tryouts = me ? me.classes.flatMap((c) => c.tryouts) : [];
+  // Ranking hanya untuk tryout berwaktu, bukan set latihan.
+  const tryouts = me ? me.classes.flatMap((c) => c.tryouts).filter((t) => t.kind !== 'latihan') : [];
 
-  useEffect(() => {
-    if (!me) return;
-    api('/api/profil').then((r) => setInstansi(r.instansi));
-    if (tryouts[0]) setTid(tryouts[0].id);
-  }, [me]);
+  useEffect(() => { api('/api/profil').then((r) => setInstansi(r.instansi)).catch(() => {}); }, []);
+  useEffect(() => { setTid((cur) => cur || tryouts[0]?.id || ''); }, [me]);
 
   useEffect(() => {
     if (!tid) return;
@@ -31,11 +28,11 @@ export default function Ranking() {
       .finally(() => setLoading(false));
   }, [tid, inst]);
 
-  if (!me) return <p className="p-8 text-sm">Memuat…</p>;
+  if (!me) return null;
   const nama = instansi.find((i) => i.id === inst)?.name;
 
   return (
-    <Shell me={me}>
+    <>
       <h1 className="text-3xl font-medium tracking-tight">Ranking</h1>
       <p className="mt-1 text-sm text-ink/60">Memakai nilai terbaik tiap peserta. Nilai sama diurutkan dari yang selesai lebih dulu.</p>
 
@@ -119,6 +116,6 @@ export default function Ranking() {
           )}
         </>
       )}
-    </Shell>
+    </>
   );
 }

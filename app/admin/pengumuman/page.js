@@ -42,7 +42,12 @@ export default function AdminPengumuman() {
                 <p className="mt-1 text-xs text-ink/60">{tgl(a.created_at)}, {a.is_active ? 'tampil' : 'disembunyikan'}</p>
               </div>
               <div className="flex gap-2">
-                <button className="btn-o !py-1" onClick={() => act(() => crud('PATCH', { id: a.id, is_active: !a.is_active }))}>{a.is_active ? 'Sembunyikan' : 'Tampilkan'}</button>
+                <button
+                  className="btn-o !py-1"
+                  onClick={async () => (await confirmBox(a.is_active ? `Sembunyikan pengumuman "${a.title}" dari dashboard peserta?` : `Tampilkan pengumuman "${a.title}" di dashboard peserta?`, { title: a.is_active ? 'Sembunyikan pengumuman?' : 'Tampilkan pengumuman?', okText: 'Ya' })) && act(() => crud('PATCH', { id: a.id, is_active: !a.is_active }))}
+                >
+                  {a.is_active ? 'Sembunyikan' : 'Tampilkan'}
+                </button>
                 <button className="btn-o !py-1" onClick={async () => (await confirmBox('Hapus pengumuman ini?', { danger: true })) && act(() => crud('DELETE', undefined, `?id=${a.id}`))}>Hapus</button>
               </div>
             </div>

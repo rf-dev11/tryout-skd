@@ -1,4 +1,4 @@
-import { db, json, err, handler } from '@/lib/server';
+import { db, json, err, handler, onlySubtes } from '@/lib/server';
 
 const CATS = ['TWK', 'TIU', 'TKP'];
 const LABELS = ['A', 'B', 'C', 'D', 'E'];
@@ -8,6 +8,9 @@ export const POST = handler(async (req) => {
   const { tryout_id, rows } = await req.json();
   if (!tryout_id || !Array.isArray(rows) || !rows.length) return err('Tidak ada soal untuk diimpor');
   if (rows.length > 300) return err('Maksimal 300 soal per impor');
+
+  const only = await onlySubtes(tryout_id);
+  if (only && rows.some((r) => r.category !== only)) return err(`Paket ini khusus ${only}. Hapus baris kategori lain dari file Excel.`);
 
   for (const [i, r] of rows.entries()) {
     const ok =

@@ -1,12 +1,17 @@
 import { db, json, err, handler } from '@/lib/server';
 export const dynamic = 'force-dynamic';
 
-const ALLOWED = ['classes', 'tryouts', 'instansi', 'announcements'];
+const ALLOWED = ['classes', 'tryouts', 'instansi', 'announcements', 'materials'];
 const check = (t) => ALLOWED.includes(t);
 
 export const GET = handler(async (req, user, { params }) => {
   if (!check(params.table)) return err('Tabel tidak valid', 404);
-  const { data, error } = await db.from(params.table).select('*').order('created_at');
+  // ?class_id=... menyaring per paket, ?cols=id,title membatasi kolom (hemat data untuk daftar panjang).
+  const sp = new URL(req.url).searchParams;
+  const cols = /^[a-z_,]+$/.test(sp.get('cols') || '') ? sp.get('cols') : '*';
+  let q = db.from(params.table).select(cols).order('created_at');
+  if (sp.get('class_id')) q = q.eq('class_id', sp.get('class_id'));
+  const { data, error } = await q;
   if (error) throw error;
   return json(data);
 }, { admin: true });

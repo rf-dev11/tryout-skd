@@ -2,8 +2,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
-import { useMe } from '@/lib/useMe';
-import { SKD } from '@/lib/config';
+import { useMe, loadMe } from '@/lib/useMe';
+import { SKD, totalSoal } from '@/lib/config';
 import { toast, confirmBox } from '@/lib/dialog';
 
 const fmt = (s) => {
@@ -53,6 +53,7 @@ export default function Exam({ id, mode = 'tryout', subtes = null }) {
     setBusy(true);
     try {
       await api(`/api/attempt/${d.attempt_id}/finish`, { method: 'POST' });
+      loadMe({ force: true }).catch(() => {}); // dashboard dan riwayat langsung memuat nilai terbaru
       router.replace(`/hasil/${d.attempt_id}`);
     } catch (e) {
       toast(e.message, 'error');
@@ -111,8 +112,10 @@ export default function Exam({ id, mode = 'tryout', subtes = null }) {
 
   useEffect(() => { window.scrollTo({ top: 0 }); }, [i]);
 
-  if (!me) return <p className="p-8 text-sm">Memuat…</p>;
-  const info = me.classes.flatMap((c) => c.tryouts).find((t) => t.id === id);
+  // Tidak menunggu data akun: halaman mulai langsung tampil, judul menyusul dari simpanan.
+  const info = me?.classes.flatMap((c) => c.tryouts).find((t) => t.id === id);
+  const nSoal = info ? totalSoal(info.counts) : null;
+  const rincian = info?.counts ? Object.keys(SKD.kategori).filter((k) => info.counts[k] > 0).map((k) => `${info.counts[k]} ${k}`).join(', ') : '';
 
   if (!d) {
     return (
@@ -120,7 +123,7 @@ export default function Exam({ id, mode = 'tryout', subtes = null }) {
        <div className="w-full max-w-xl">
         <div className="card !p-6 sm:!p-8">
         <p className="text-lg font-medium tracking-tight text-flame">Tryout SKD</p>
-        <h1 className="mt-1 text-3xl font-medium tracking-tight">{info?.title || 'Tryout SKD'}{latihan && `, latihan ${subtes}`}</h1>
+        <h1 className="mt-1 text-3xl font-medium tracking-tight">{info?.title || (me ? 'Tryout SKD' : '…')}{latihan && `, latihan ${subtes}`}</h1>
         <ul className="mt-4 list-disc space-y-1.5 pl-5 text-sm text-ink/75">
           {latihan ? (
             <>
@@ -130,7 +133,7 @@ export default function Exam({ id, mode = 'tryout', subtes = null }) {
             </>
           ) : (
             <>
-              <li>{SKD.total} soal: {SKD.kategori.TWK.jumlah} TWK, {SKD.kategori.TIU.jumlah} TIU, {SKD.kategori.TKP.jumlah} TKP.</li>
+              <li>{nSoal ? `${nSoal} soal: ${rincian}.` : `${SKD.total} soal: ${SKD.kategori.TWK.jumlah} TWK, ${SKD.kategori.TIU.jumlah} TIU, ${SKD.kategori.TKP.jumlah} TKP.`}</li>
               <li>Waktu {info?.duration_minutes || SKD.durasi} menit. Timer tetap berjalan walau halaman ditutup.</li>
               <li>Jawaban tersimpan otomatis. Klik pilihan yang sama lagi untuk membatalkan. Tandai soal yang masih ragu dengan tombol Ragu-ragu.</li>
             </>

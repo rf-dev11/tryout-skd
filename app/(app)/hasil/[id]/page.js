@@ -2,29 +2,40 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import Shell from '@/components/Shell';
 import { api } from '@/lib/api';
-import { useMe } from '@/lib/useMe';
 import { SKD } from '@/lib/config';
+import { Sk, LoadError } from '@/components/Skeleton';
 
 export default function Hasil() {
   const { id } = useParams();
-  const me = useMe();
   const [d, setD] = useState(null);
   const [error, setError] = useState('');
   const [f, setF] = useState('SEMUA');
 
-  useEffect(() => {
-    if (me) api(`/api/attempt/${id}`).then(setD).catch((e) => setError(e.message));
-  }, [me]);
+  const load = () => {
+    setError('');
+    api(`/api/attempt/${id}`).then(setD).catch((e) => setError(e.message));
+  };
+  useEffect(load, [id]);
 
-  if (error) return <p className="p-8 text-sm">{error}</p>;
-  if (!me || !d) return <p className="p-8 text-sm">Memuat…</p>;
+  if (error) return <LoadError message={error} onRetry={load} />;
+  if (!d) {
+    return (
+      <div className="space-y-4" aria-busy="true">
+        <Sk className="h-9 w-72 max-w-full" />
+        <div className="grid gap-4 sm:grid-cols-[1fr_2fr]"><Sk className="h-40 !rounded-3xl" /><Sk className="h-40 !rounded-3xl" /></div>
+        <Sk className="h-64 !rounded-3xl" />
+      </div>
+    );
+  }
 
   const { attempt: a, questions, answers } = d;
   const latihan = a.mode === 'latihan';
   const skor = { TWK: a.score_twk, TIU: a.score_tiu, TKP: a.score_tkp };
-  const lolos = Object.entries(SKD.kategori).every(([k, v]) => skor[k] >= v.ambang);
+  // Hanya kategori yang benar-benar ada soalnya yang dinilai (paket topik hanya berisi satu subtes).
+  const ada = Object.keys(SKD.kategori).filter((k) => questions.some((q) => q.category === k));
+  const penuh = ada.length === Object.keys(SKD.kategori).length;
+  const lolos = ada.every((k) => skor[k] >= SKD.kategori[k].ambang);
 
   // Analisis per topik: TWK/TIU = jawaban tepat, TKP = poin yang diperoleh dibanding poin tertinggi.
   const per = {};
@@ -46,8 +57,9 @@ export default function Hasil() {
   const lemah = topik.filter((t) => t.pct < 70).slice(0, 3);
 
   return (
-    <Shell me={me}>
-      <h1 className="text-3xl font-medium tracking-tight">{d.tryout.title}{latihan && `, latihan ${a.subtes}`}</h1>
+    <>
+      <Link href="/riwayat" className="text-sm font-medium text-flame underline-offset-4 hover:underline">Kembali ke riwayat</Link>
+      <h1 className="mt-2 text-3xl font-medium tracking-tight">{d.tryout.title}{latihan && `, latihan ${a.subtes}`}</h1>
 
       {latihan ? (
         <div className="mt-5 max-w-sm rounded-3xl border border-ink bg-sun p-5">
@@ -60,10 +72,10 @@ export default function Hasil() {
           <div className={`rounded-3xl border border-ink p-5 ${lolos ? 'bg-frame text-white' : 'bg-sun'}`}>
             <p className="text-sm">Skor total</p>
             <p className="text-6xl font-medium">{a.score_total}</p>
-            <p className="mt-2 text-sm">{lolos ? 'Memenuhi nilai ambang batas semua kategori.' : 'Belum memenuhi nilai ambang batas.'}</p>
+            <p className="mt-2 text-sm">{lolos ? (penuh ? 'Memenuhi nilai ambang batas semua kategori.' : 'Memenuhi nilai ambang batas kategori yang diuji.') : 'Belum memenuhi nilai ambang batas.'}</p>
           </div>
-          <div className="grid grid-cols-3 gap-2 sm:gap-4">
-            {Object.entries(SKD.kategori).map(([k, v], n) => {
+          <div className="grid gap-2 sm:gap-4" style={{ gridTemplateColumns: `repeat(${ada.length || 1}, minmax(0, 1fr))` }}>
+            {Object.entries(SKD.kategori).filter(([k]) => ada.includes(k)).map(([k, v], n) => {
               const ok = skor[k] >= v.ambang;
               return (
                 <div key={k} className={`rounded-3xl border border-ink p-3 sm:p-4 ${['bg-sun', 'bg-lilac', 'bg-sky'][n]}`}>
@@ -108,9 +120,9 @@ export default function Hasil() {
       )}
 
       <h2 className="mt-10 text-2xl font-medium tracking-tight">Pembahasan</h2>
-      {!latihan && (
+      {!latihan && ada.length > 1 && (
         <div className="mt-3 flex flex-wrap gap-2">
-          {['SEMUA', 'TWK', 'TIU', 'TKP'].map((k) => (
+          {['SEMUA', ...ada].map((k) => (
             <button key={k} className={f === k ? 'btn' : 'btn-o'} onClick={() => setF(k)}>{k === 'SEMUA' ? 'Semua' : k}</button>
           ))}
         </div>
@@ -156,7 +168,10 @@ export default function Hasil() {
           );
         })}
       </div>
-      <Link href="/dashboard" className="btn-o mt-6">Kembali ke dashboard</Link>
-    </Shell>
+      <div className="mt-6 flex flex-wrap gap-3">
+        <Link href="/riwayat" className="btn">Lihat semua riwayat</Link>
+        <Link href="/dashboard" className="btn-o">Kembali ke dashboard</Link>
+      </div>
+    </>
   );
 }

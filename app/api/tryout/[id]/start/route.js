@@ -13,9 +13,13 @@ export const POST = handler(async (req, user, { params }) => {
   const { data: t } = await db.from('tryouts').select('*').eq('id', params.id).single();
   if (!t || !t.is_published) return err('Tryout tidak ditemukan', 404);
 
-  const { data: enr } = await db
-    .from('enrollments').select('user_id').eq('user_id', user.id).eq('class_id', t.class_id).maybeSingle();
-  if (!enr) return err('Kamu belum punya akses ke kelas ini', 403);
+  const [{ data: enr }, { data: pk }] = await Promise.all([
+    db.from('enrollments').select('user_id').eq('user_id', user.id).eq('class_id', t.class_id).maybeSingle(),
+    db.from('classes').select('package_type').eq('id', t.class_id).single(),
+  ]);
+  if (!enr) return err('Kamu belum punya akses ke paket ini', 403);
+  if (mode === 'tryout' && t.kind === 'latihan') return err('Item ini khusus latihan tanpa waktu');
+  if (mode === 'latihan' && t.kind !== 'latihan' && pk?.package_type !== 'campuran') return err('Paket ini tidak menyediakan latihan per subtes');
 
   let q = db
     .from('attempts').select('*, tryouts(duration_minutes)')

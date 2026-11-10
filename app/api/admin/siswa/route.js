@@ -8,7 +8,7 @@ export const GET = handler(async () => {
   return json(data);
 }, { admin: true });
 
-// Buat akun siswa (setelah pembayaran dikonfirmasi) + langsung beri akses kelas.
+// Buat akun siswa (setelah pembayaran dikonfirmasi) + langsung beri akses paket.
 export const POST = handler(async (req) => {
   const { full_name, email, password, class_ids = [] } = await req.json();
   if (!full_name || !email || !password) return err('Nama, email, dan password wajib diisi');
@@ -23,12 +23,14 @@ export const POST = handler(async (req) => {
     throw e2;
   }
   if (class_ids.length) {
-    await db.from('enrollments').insert(class_ids.map((c) => ({ user_id: data.user.id, class_id: c })));
+    const { error: e3 } = await db
+      .from('enrollments').upsert([...new Set(class_ids)].map((c) => ({ user_id: data.user.id, class_id: c })), { onConflict: 'user_id,class_id' });
+    if (e3) throw e3;
   }
   return json({ ok: true });
 }, { admin: true });
 
-// Atur akses kelas ({user_id, class_id, on}) atau ganti password ({user_id, password}).
+// Atur akses paket ({user_id, class_id, on}) atau ganti password ({user_id, password}).
 export const PATCH = handler(async (req) => {
   const { user_id, class_id, on, password } = await req.json();
   if (password) {
@@ -37,9 +39,17 @@ export const PATCH = handler(async (req) => {
     if (error) return err(error.message);
     return json({ ok: true });
   }
-  if (on) await db.from('enrollments').upsert({ user_id, class_id });
-  else await db.from('enrollments').delete().eq('user_id', user_id).eq('class_id', class_id);
-  return json({ ok: true });
+  if (!user_id || !class_id) return err('Siswa atau paket tidak valid');
+  if (on) {
+    const { error } = await db.from('enrollments').upsert({ user_id, class_id }, { onConflict: 'user_id,class_id' });
+    if (error) throw error;
+  } else {
+    const { error } = await db.from('enrollments').delete().eq('user_id', user_id).eq('class_id', class_id);
+    if (error) throw error;
+  }
+  // Kembalikan daftar akses terbaru supaya tampilan admin selalu sama dengan isi database.
+  const { data } = await db.from('enrollments').select('class_id').eq('user_id', user_id);
+  return json({ ok: true, class_ids: (data || []).map((r) => r.class_id) });
 }, { admin: true });
 
 export const DELETE = handler(async (req) => {

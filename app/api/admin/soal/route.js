@@ -1,4 +1,4 @@
-import { db, json, err, handler } from '@/lib/server';
+import { db, json, err, handler, onlySubtes } from '@/lib/server';
 import { sortQ } from '@/lib/config';
 export const dynamic = 'force-dynamic';
 
@@ -14,6 +14,13 @@ export const GET = handler(async (req) => {
 // Simpan soal baru / ubah soal lama beserta pilihan jawabannya.
 export const POST = handler(async (req) => {
   const { id, options = [], ...q } = await req.json();
+
+  // Validasi dulu sebelum ada yang disimpan, supaya tidak ada soal tanpa pilihan jawaban.
+  const keep = options.filter((o) => o.body || o.image_url);
+  if (keep.length < 2) return err('Minimal 2 pilihan jawaban');
+  const only = await onlySubtes(q.tryout_id);
+  if (only && q.category !== only) return err(`Paket ini khusus ${only}. Soal kategori lain tidak bisa ditambahkan.`);
+
   const row = {
     tryout_id: q.tryout_id,
     category: q.category,
@@ -34,9 +41,6 @@ export const POST = handler(async (req) => {
     if (error) throw error;
     qid = data.id;
   }
-
-  const keep = options.filter((o) => o.body || o.image_url);
-  if (keep.length < 2) return err('Minimal 2 pilihan jawaban');
 
   // Upsert per label supaya riwayat jawaban peserta tidak hilang saat soal diedit.
   const { error: e1 } = await db.from('options').upsert(

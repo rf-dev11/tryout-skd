@@ -1,13 +1,17 @@
 'use client';
 import Shell from '@/components/Shell';
-import { useMe } from '@/lib/useMe';
+import { PageSkeleton, LoadError } from '@/components/Skeleton';
+import { useMeState } from '@/lib/useMe';
 
 export default function AdminLayout({ children }) {
-  const me = useMe({ admin: true });
-  if (!me) return <p className="p-8 text-sm">Memuat…</p>;
+  const { me, error, retry } = useMeState({ admin: true });
   return (
-    <Shell me={me} links={[{ href: '/admin', label: 'Kelas dan tryout' }, { href: '/admin/siswa', label: 'Siswa' }, { href: '/admin/instansi', label: 'Instansi' }, { href: '/admin/pengumuman', label: 'Pengumuman' }]}>
-      {children}
+    <Shell
+      me={me}
+      admin
+      links={[{ href: '/admin', label: 'Paket dan tryout' }, { href: '/admin/siswa', label: 'Siswa' }, { href: '/admin/instansi', label: 'Instansi' }, { href: '/admin/pengumuman', label: 'Pengumuman' }]}
+    >
+      {me ? children : error ? <LoadError message={error} onRetry={retry} /> : <PageSkeleton cards={2} />}
     </Shell>
   );
 }

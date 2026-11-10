@@ -8,7 +8,7 @@ const L = ['A', 'B', 'C', 'D', 'E'];
 const str = (v) => (v === null || v === undefined ? '' : String(v).trim());
 
 // Baca baris Excel (baris pertama = judul kolom) dan validasi tiap soal.
-function parse(rows) {
+function parse(rows, only) {
   const head = (rows[0] || []).map((h) => str(h).toLowerCase());
   const need = ['kategori', 'soal', 'opsi_a', 'opsi_b'];
   const miss = need.find((k) => head.indexOf(k) < 0);
@@ -25,6 +25,7 @@ function parse(rows) {
       const warnings = [];
       const category = g('kategori').toUpperCase();
       if (!TOPIK[category]) errors.push('kategori harus TWK, TIU, atau TKP');
+      else if (only && category !== only) errors.push(`paket ini khusus ${only}`);
       const body = g('soal');
       if (!body) errors.push('soal kosong');
 
@@ -56,7 +57,7 @@ function parse(rows) {
     });
 }
 
-export default function ImportExcel({ tryoutId, onDone }) {
+export default function ImportExcel({ tryoutId, only = null, onDone }) {
   const [rows, setRows] = useState(null);
   const [busy, setBusy] = useState(false);
 
@@ -65,7 +66,7 @@ export default function ImportExcel({ tryoutId, onDone }) {
     if (!file) return;
     try {
       const readXlsxFile = (await import('read-excel-file')).default;
-      setRows(parse(await readXlsxFile(file)));
+      setRows(parse(await readXlsxFile(file), only));
     } catch (err) {
       toast(err.message || 'File tidak bisa dibaca. Gunakan file .xlsx sesuai template.', 'error');
     }

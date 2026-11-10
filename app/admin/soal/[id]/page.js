@@ -18,14 +18,23 @@ export default function Soal() {
   const { id } = useParams();
   const [qs, setQs] = useState([]);
   const [tryout, setTryout] = useState(null);
+  const [paket, setPaket] = useState(null);
   const [f, setF] = useState(blank());
   const [saving, setSaving] = useState(false);
 
   const load = async () => {
-    setQs(await api(`/api/admin/soal?tryout_id=${id}`));
-    setTryout((await api('/api/admin/crud/tryouts')).find((t) => t.id === id));
+    const [q, ts, cs] = await Promise.all([api(`/api/admin/soal?tryout_id=${id}`), api('/api/admin/crud/tryouts'), api('/api/admin/crud/classes')]);
+    const t = ts.find((x) => x.id === id);
+    setQs(q);
+    setTryout(t);
+    setPaket(cs.find((c) => c.id === t?.class_id) || null);
   };
   useEffect(() => { load().catch((e) => toast(e.message, 'error')); }, []);
+
+  // Paket topik hanya boleh berisi satu subtes.
+  const only = paket?.package_type === 'topik' ? paket.topic_subtes : null;
+  const cats = Object.keys(SKD.kategori).filter((k) => !only || k === only);
+  useEffect(() => { if (only) setF((s) => (s.id || s.category === only ? s : blank(only))); }, [only]);
 
   const tkp = f.category === 'TKP';
   const set = (k, v) => setF((s) => ({ ...s, [k]: v }));
@@ -53,6 +62,7 @@ export default function Soal() {
     if (filled.length < 2) return toast('Minimal 2 pilihan jawaban.', 'warn');
     if (tkp && filled.some((o) => o.points < 1 || o.points > 5)) return toast('Poin TKP tiap pilihan harus 1 sampai 5.', 'warn');
     if (!tkp && filled.filter((o) => o.points === 5).length !== 1) return toast('Pilih satu kunci jawaban.', 'warn');
+    if (f.id && !(await confirmBox('Perubahan soal ini langsung berlaku untuk peserta berikutnya. Nilai yang sudah tersimpan tidak dihitung ulang.', { title: 'Simpan perubahan soal?', okText: 'Ya, simpan' }))) return;
     setSaving(true);
     try {
       const inCat = qs.filter((q) => q.category === f.category);
@@ -74,28 +84,29 @@ export default function Soal() {
   return (
     <div className="space-y-6">
       <div>
-        <Link href="/admin" className="text-sm font-medium text-flame underline-offset-4 hover:underline">Kembali ke kelas</Link>
+        <Link href="/admin" className="text-sm font-medium text-flame underline-offset-4 hover:underline">Kembali ke paket</Link>
         <h1 className="mt-1 text-3xl font-medium tracking-tight">{tryout?.title || 'Soal'}</h1>
         <div className="mt-3 flex flex-wrap gap-3 text-sm">
-          {Object.entries(SKD.kategori).map(([k, v]) => {
+          {Object.entries(SKD.kategori).filter(([k]) => cats.includes(k)).map(([k, v]) => {
             const n = qs.filter((q) => q.category === k).length;
+            const target = tryout?.kind !== 'latihan' && !only; // target jumlah soal hanya untuk tryout SKD penuh
             return (
-              <span key={k} className={`rounded-full border border-ink px-3.5 py-1 ${n >= v.jumlah ? 'bg-ink text-white' : 'bg-white'}`}>
-                {k} {n} dari {v.jumlah}
+              <span key={k} className={`rounded-full border border-ink px-3.5 py-1 ${target && n >= v.jumlah ? 'bg-ink text-white' : 'bg-white'}`}>
+                {k} {n}{target ? ` dari ${v.jumlah}` : ' soal'}
               </span>
             );
           })}
         </div>
       </div>
 
-      <ImportExcel tryoutId={id} onDone={load} />
+      <ImportExcel tryoutId={id} only={only} onDone={load} />
 
       <section className="card space-y-4">
         <h2 className="text-xl font-medium">{f.id ? 'Ubah soal' : 'Soal baru'}</h2>
         <div className="sm:w-64">
           <label className="label">Kategori</label>
           <select className="input" value={f.category} onChange={(e) => setCategory(e.target.value)}>
-            {Object.entries(SKD.kategori).map(([k, v]) => <option key={k} value={k}>{k}, {v.nama}</option>)}
+            {Object.entries(SKD.kategori).filter(([k]) => cats.includes(k)).map(([k, v]) => <option key={k} value={k}>{k}, {v.nama}</option>)}
           </select>
         </div>
 

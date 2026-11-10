@@ -1,10 +1,12 @@
 'use client';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { usePathname } from 'next/navigation';
+import { useLogout } from '@/lib/useMe';
+import { Sk } from './Skeleton';
 
 const STUDENT = [
   { href: '/dashboard', label: 'Dashboard' },
+  { href: '/riwayat', label: 'Riwayat' },
   { href: '/ranking', label: 'Ranking' },
   { href: '/profil', label: 'Profil' },
 ];
@@ -12,6 +14,7 @@ const STUDENT = [
 // Ikon garis sederhana, dipilih berdasarkan alamat menu.
 const ICONS = {
   '/dashboard': <><rect x="3.5" y="3.5" width="7" height="7" rx="2" /><rect x="13.5" y="3.5" width="7" height="7" rx="2" /><rect x="3.5" y="13.5" width="7" height="7" rx="2" /><rect x="13.5" y="13.5" width="7" height="7" rx="2" /></>,
+  '/riwayat': <><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1M3.5 4.5v4h4" /><path d="M12 7.5V12l3 2" /></>,
   '/ranking': <><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z" /><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3" /></>,
   '/profil': <><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 4-6 8-6s8 2 8 6" /></>,
   '/admin': <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />,
@@ -29,16 +32,14 @@ function Icon({ name, className = 'h-6 w-6' }) {
   );
 }
 
-export default function Shell({ me, links = [], children }) {
-  const router = useRouter();
+// Shell dipasang sekali di layout, jadi menu samping tidak ikut dimuat ulang saat pindah halaman.
+// admin: true untuk panel admin. Saat data akun masih dimuat (me kosong), kerangka menu tetap tampil.
+export default function Shell({ me, links = [], admin = false, children }) {
   const path = usePathname() || '';
-  const student = !!me && me.profile.role !== 'admin';
+  const logout = useLogout();
+  const student = !admin;
   const nav = [...(student ? STUDENT : []), ...links];
   const on = (h) => (h === '/admin' ? path === h : path === h || path.startsWith(h + '/'));
-  const logout = async () => {
-    await supabase.auth.signOut();
-    router.replace('/login');
-  };
 
   return (
     <div className="app-bg">
@@ -60,11 +61,9 @@ export default function Shell({ me, links = [], children }) {
               </Link>
             ))}
           </div>
-          {me && (
-            <button aria-label="Keluar" title="Keluar" onClick={logout} className="flex h-12 w-12 items-center justify-center rounded-2xl text-white/80 transition hover:bg-white/10">
-              <Icon name="logout" />
-            </button>
-          )}
+          <button aria-label="Keluar" title="Keluar" onClick={logout} className="flex h-12 w-12 items-center justify-center rounded-2xl text-white/80 transition hover:bg-white/10">
+            <Icon name="logout" />
+          </button>
         </aside>
 
         <div className="app-panel">
@@ -75,6 +74,7 @@ export default function Shell({ me, links = [], children }) {
                 <span className="hidden text-sm text-ink/60 sm:inline">Selamat datang di</span>
                 <span className="text-2xl font-medium tracking-tight text-flame">Tryout SKD</span>
               </Link>
+              {!me && <Sk className="h-11 w-11 !rounded-full sm:w-44" />}
               {me && (
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2.5 rounded-full border border-ink bg-white py-1 pl-1 pr-4">
@@ -83,7 +83,7 @@ export default function Shell({ me, links = [], children }) {
                     </span>
                     <span className="hidden min-w-0 leading-tight sm:block">
                       <span className="block max-w-[10rem] truncate text-sm font-medium">{me.profile.full_name}</span>
-                      <span className="block text-xs text-ink/60">{student ? 'Peserta' : 'Admin'}</span>
+                      <span className="block text-xs text-ink/60">{me.profile.role === 'admin' ? 'Admin' : 'Peserta'}</span>
                     </span>
                   </div>
                   <button onClick={logout} aria-label="Keluar" className="flex h-11 w-11 items-center justify-center rounded-full border border-ink bg-white transition hover:bg-ink/5 md:hidden">
@@ -110,7 +110,7 @@ export default function Shell({ me, links = [], children }) {
 
       {/* Peserta di ponsel: menu tab di bawah layar */}
       {student && (
-        <nav className="fixed inset-x-3 bottom-3 z-20 grid grid-cols-3 gap-1 rounded-3xl bg-frame p-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom))] shadow-lg md:hidden">
+        <nav className="fixed inset-x-3 bottom-3 z-20 grid grid-cols-4 gap-1 rounded-3xl bg-frame p-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom))] shadow-lg md:hidden">
           {STUDENT.map((l) => (
             <Link key={l.href} href={l.href} className={`flex flex-col items-center gap-0.5 rounded-2xl py-2 text-xs font-medium ${on(l.href) ? 'bg-sun text-ink' : 'text-white/80'}`}>
               <Icon name={l.href} className="h-5 w-5" />

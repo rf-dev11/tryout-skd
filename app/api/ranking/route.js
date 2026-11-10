@@ -14,7 +14,7 @@ export const GET = handler(async (req, user) => {
   if (user.role !== 'admin') {
     const { data: enr } = await db
       .from('enrollments').select('user_id').eq('user_id', user.id).eq('class_id', t.class_id).maybeSingle();
-    if (!enr) return err('Kamu belum punya akses ke kelas ini', 403);
+    if (!enr) return err('Kamu belum punya akses ke paket ini', 403);
   }
 
   const { data: rows, error } = await db

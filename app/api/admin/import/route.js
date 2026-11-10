@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { db, json, err, handler, onlySubtes } from '@/lib/server';
 
 const CATS = ['TWK', 'TIU', 'TKP'];

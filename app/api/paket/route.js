@@ -29,8 +29,8 @@ export async function GET() {
       jumlah_latihan: ts.filter((t) => t.class_id === p.id && t.kind === 'latihan').length,
       jumlah_bacaan: ms.filter((m) => m.class_id === p.id).length,
     }));
-    // Boleh disimpan CDN 30 detik: beranda cepat dibuka walau banyak pengunjung.
-    return NextResponse.json(list, { headers: { 'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=300' } });
+    // Paket dapat diubah admin kapan saja; jangan sajikan salinan cache lama.
+    return NextResponse.json(list, { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate' } });
   } catch (e) {
     return NextResponse.json({ error: e.message || 'Gagal memuat paket' }, { status: 500 });
   }

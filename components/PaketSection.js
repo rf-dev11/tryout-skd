@@ -30,12 +30,22 @@ export default function PaketSection() {
 
   const load = () => {
     setGagal(false);
-    fetch('/api/paket')
+    fetch('/api/paket', { cache: 'no-store' })
       .then((r) => (r.ok ? r.json() : Promise.reject()))
       .then(setList)
       .catch(() => { setGagal(true); setList([]); });
   };
-  useEffect(load, []);
+  useEffect(() => {
+    load();
+    const onFocus = () => load();
+    const onVisible = () => { if (document.visibilityState === 'visible') load(); };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, []);
 
   useEffect(() => {
     if (pick) document.getElementById('cara-bayar')?.scrollIntoView({ behavior: 'smooth', block: 'start' });

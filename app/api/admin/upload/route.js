@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { db, json, err, handler } from '@/lib/server';
 
 export const POST = handler(async (req) => {

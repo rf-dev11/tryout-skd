@@ -25,7 +25,7 @@ export default function LupaPassword() {
     <div className="auth-wrap">
       <div className="auth-frame">
       <form onSubmit={submit} className="auth-panel">
-        <p className="text-lg font-medium tracking-tight text-flame">Tryout SKD</p>
+        <p className="text-lg font-medium tracking-tight text-flame">OneShoot ASN</p>
         <h1 className="text-3xl font-medium tracking-tight">Lupa password</h1>
         {sent ? (
           <p className="text-sm">Jika email terdaftar, tautan untuk membuat password baru sudah dikirim. Cek kotak masuk dan folder spam.</p>

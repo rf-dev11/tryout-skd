@@ -137,7 +137,7 @@ export default function Dashboard() {
         <div className="card mt-6">
           <p>Kamu belum punya paket aktif.</p>
           <p className="mt-1 text-sm text-ink/60">Sudah bayar? Hubungi admin lewat WhatsApp supaya paketmu diaktifkan.</p>
-          <Link href="/" className="btn mt-4">Lihat paket</Link>
+          <Link href="/tambah-paket" className="btn mt-4">Pilih paket</Link>
         </div>
       )}
 
@@ -177,6 +177,18 @@ export default function Dashboard() {
               </div>
             );
           })}
+          {murid && (
+            <Link
+              href="/tambah-paket"
+              className="flex min-h-[16rem] flex-col items-center justify-center gap-3 rounded-3xl border-2 border-dashed border-ink/40 bg-white p-6 text-center transition hover:border-ink hover:bg-sun/30"
+            >
+              <span className="flex h-14 w-14 items-center justify-center rounded-full bg-flame text-white">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" className="h-7 w-7" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
+              </span>
+              <span className="text-lg font-medium">Tambah paket</span>
+              <span className="max-w-[16rem] text-sm text-ink/60">Pilih paket lain, bayar lewat QRIS, lalu konfirmasi ke admin lewat WhatsApp.</span>
+            </Link>
+          )}
         </div>
       )}
 

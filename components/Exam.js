@@ -122,7 +122,7 @@ export default function Exam({ id, mode = 'tryout', subtes = null }) {
       <div className="auth-wrap">
        <div className="w-full max-w-xl">
         <div className="card !p-6 sm:!p-8">
-        <p className="text-lg font-medium tracking-tight text-flame">Tryout SKD</p>
+        <p className="text-lg font-medium tracking-tight text-flame">OneShoot ASN</p>
         <h1 className="mt-1 text-3xl font-medium tracking-tight">{info?.title || (me ? 'Tryout SKD' : '…')}{latihan && `, latihan ${subtes}`}</h1>
         <ul className="mt-4 list-disc space-y-1.5 pl-5 text-sm text-ink/75">
           {latihan ? (

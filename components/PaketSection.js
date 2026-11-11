@@ -23,10 +23,12 @@ function isi(p) {
   return out;
 }
 
-export default function PaketSection() {
+export default function PaketSection({ owned = [], buyer = null }) {
   const [list, setList] = useState(null);
   const [gagal, setGagal] = useState(false);
   const [pick, setPick] = useState(null);
+  // Di dashboard peserta: paket yang sudah dimiliki tidak ditawarkan lagi.
+  const shown = list ? list.filter((p) => !owned.includes(p.id)) : null;
 
   const load = () => {
     setGagal(false);
@@ -51,11 +53,13 @@ export default function PaketSection() {
     if (pick) document.getElementById('cara-bayar')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [pick]);
 
-  const wa = pick
-    ? `https://wa.me/${WA_ADMIN}?text=${encodeURIComponent(
-        `Halo admin, saya sudah bayar paket "${pick.title}" (${rupiah(pick.price)}) lewat QRIS. Bukti pembayaran saya lampirkan.\n\nNama:\nEmail untuk login:`
-      )}`
+  // Peserta yang sudah login: nama dan email ikut terisi, jadi admin langsung tahu akun mana yang diaktifkan.
+  const pesan = pick
+    ? buyer
+      ? `Halo admin, saya ${buyer.name} (${buyer.email}) ingin menambah paket "${pick.title}" (${rupiah(pick.price)}). Saya sudah bayar lewat QRIS, bukti pembayaran saya lampirkan.`
+      : `Halo admin, saya sudah bayar paket "${pick.title}" (${rupiah(pick.price)}) lewat QRIS. Bukti pembayaran saya lampirkan.\n\nNama:\nEmail untuk login:`
     : '';
+  const wa = pick ? `https://wa.me/${WA_ADMIN}?text=${encodeURIComponent(pesan)}` : '';
 
   return (
     <div>
@@ -71,10 +75,14 @@ export default function PaketSection() {
           <button className="btn mt-4" onClick={load}>Coba lagi</button>
         </div>
       )}
-      {list && !gagal && list.length === 0 && <p className="card text-sm text-ink/70">Belum ada paket yang dibuka. Hubungi admin lewat WhatsApp untuk info terbaru.</p>}
+      {shown && !gagal && shown.length === 0 && (
+        <p className="card text-sm text-ink/70">
+          {owned.length > 0 ? 'Belum ada paket lain yang bisa ditambahkan saat ini.' : 'Belum ada paket yang dibuka.'} Hubungi admin lewat WhatsApp untuk info terbaru.
+        </p>
+      )}
 
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {list?.map((p, n) => {
+        {shown?.map((p, n) => {
           const tone = TONES[n % TONES.length];
           return (
             <article
@@ -110,7 +118,7 @@ export default function PaketSection() {
             <ol className="list-decimal space-y-2 pl-5 text-sm text-white/85">
               <li>Scan QRIS dan bayar tepat {rupiah(pick.price)}.</li>
               <li>Kirim bukti pembayaran ke admin lewat WhatsApp.</li>
-              <li>Admin membuat akun dan mengaktifkan paketmu. Setelah itu kamu bisa masuk dan mulai belajar.</li>
+              <li>{buyer ? 'Admin mengaktifkan paket di akunmu. Setelah itu paket muncul di dashboard.' : 'Admin membuat akun dan mengaktifkan paketmu. Setelah itu kamu bisa masuk dan mulai belajar.'}</li>
             </ol>
           </div>
           <div className="mt-5 flex flex-wrap gap-3">

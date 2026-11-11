@@ -39,7 +39,7 @@ export default function ResetPassword() {
     <div className="auth-wrap">
       <div className="auth-frame">
       <form onSubmit={submit} className="auth-panel">
-        <p className="text-lg font-medium tracking-tight text-flame">Tryout SKD</p>
+        <p className="text-lg font-medium tracking-tight text-flame">OneShoot ASN</p>
         <h1 className="text-3xl font-medium tracking-tight">Password baru</h1>
         {!ready ? (
           <p className="text-sm">Memeriksa tautan… Jika tidak berubah, tautan sudah kedaluwarsa. <Link href="/lupa-password" className="font-medium text-flame underline">Minta tautan baru</Link>.</p>

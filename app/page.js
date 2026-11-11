@@ -110,7 +110,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-paper">
       <header className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-5 sm:px-7">
-        <span className="text-2xl font-medium tracking-tight text-flame">Tryout SKD</span>
+        <span className="text-2xl font-medium tracking-tight text-flame">OneShoot ASN</span>
         <nav className="hidden items-center gap-6 text-sm font-medium md:flex" aria-label="Menu beranda">
           <a href="#paket" className="hover:text-flame">Paket</a>
           <a href="#fitur" className="hover:text-flame">Fitur</a>
@@ -248,7 +248,7 @@ export default function Home() {
 
       <footer className="border-t border-ink/15">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-6 text-sm sm:px-7">
-          <span className="font-medium text-flame">Tryout SKD</span>
+          <span className="font-medium text-flame">OneShoot ASN</span>
           <div className="flex flex-wrap gap-x-5 gap-y-2 text-ink/70">
             <Link href="/login" className="hover:text-ink">Masuk</Link>
             <Link href="/lupa-password" className="hover:text-ink">Lupa password</Link>

@@ -37,7 +37,7 @@ export default function Login() {
     <div className="auth-wrap">
       <div className="auth-frame">
       <form onSubmit={submit} className="auth-panel">
-        <Link href="/" className="block text-lg font-medium tracking-tight text-flame">Tryout SKD</Link>
+        <Link href="/" className="block text-lg font-medium tracking-tight text-flame">OneShoot ASN</Link>
         <h1 className="text-3xl font-medium tracking-tight">Masuk</h1>
         <div>
           <label className="label">Email</label>

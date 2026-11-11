@@ -4,6 +4,7 @@ import { api } from '@/lib/api';
 import { useMe } from '@/lib/useMe';
 import { SKD } from '@/lib/config';
 import { toast } from '@/lib/dialog';
+import InstansiPicker from '@/components/InstansiPicker';
 
 export default function Ranking() {
   const me = useMe();
@@ -49,10 +50,7 @@ export default function Ranking() {
             </div>
             <div>
               <label className="label">Instansi tujuan</label>
-              <select className="input" value={inst} onChange={(e) => setInst(e.target.value)}>
-                <option value="">Semua instansi</option>
-                {instansi.map((i) => <option key={i.id} value={i.id}>{i.name}</option>)}
-              </select>
+              <InstansiPicker value={inst} options={instansi} onChange={setInst} emptyLabel="Semua instansi" />
             </div>
           </div>
 

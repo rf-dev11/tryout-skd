@@ -8,10 +8,11 @@ export const GET = handler(async (req, user) => {
   if (user.role === 'admin') return json({ profile: user, classes: [], announcements: [] });
 
   // Gelombang 1: semua yang tidak saling bergantung dijalankan bersamaan (lebih cepat di koneksi lambat).
-  const [, enr, ann] = await Promise.all([
+  const [, enr, ann, inst] = await Promise.all([
     settleExpired(user.id),
     db.from('enrollments').select('classes(*)').eq('user_id', user.id),
     db.from('announcements').select('id,title,body,created_at').eq('is_active', true).order('created_at', { ascending: false }).limit(3),
+    user.instansi_id ? db.from('instansi').select('name').eq('id', user.instansi_id).maybeSingle() : null,
   ]);
   const classes = (enr.data || [])
     .map((e) => e.classes)
@@ -33,7 +34,7 @@ export const GET = handler(async (req, user) => {
   const counts = await countsFor(tryouts.map((t) => t.id)); // null jika migrasi belum dijalankan
 
   return json({
-    profile: user,
+    profile: { ...user, instansi_name: inst?.data?.name || null },
     announcements: ann.data || [],
     classes: classes.map((c) => ({
       ...c,

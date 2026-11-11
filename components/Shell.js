@@ -47,7 +47,7 @@ export default function Shell({ me, links = [], admin = false, children }) {
         {/* Desktop: bilah ikon di sisi kiri */}
         <aside className="sticky top-0 hidden h-screen w-[84px] shrink-0 flex-col items-center justify-between self-start bg-frame py-5 md:flex">
           <div className="flex flex-col items-center gap-3">
-            <Link href="/" aria-label="Beranda" className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-flame text-[11px] font-bold tracking-wide text-white">SKD</Link>
+            <Link href="/" aria-label="Beranda" className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-flame text-sm font-bold tracking-wide text-white">OS</Link>
             {nav.map((l) => (
               <Link
                 key={l.href}
@@ -72,20 +72,20 @@ export default function Shell({ me, links = [], admin = false, children }) {
             <div className="flex items-center justify-between gap-3">
               <Link href="/" className="flex items-baseline gap-2">
                 <span className="hidden text-sm text-ink/60 sm:inline">Selamat datang di</span>
-                <span className="text-2xl font-medium tracking-tight text-flame">Tryout SKD</span>
+                <span className="text-2xl font-medium tracking-tight text-flame">OneShoot ASN</span>
               </Link>
               {!me && <Sk className="h-11 w-11 !rounded-full sm:w-44" />}
               {me && (
                 <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2.5 rounded-full border border-ink bg-white py-1 pl-1 pr-4">
+                  <Link href={student ? '/profil' : '/admin'} aria-label="Buka profil" className="flex items-center gap-2.5 rounded-full border border-ink bg-white py-1 pl-1 pr-4 transition hover:bg-ink/5">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sun text-base font-semibold">
                       {(me.profile.full_name || '?').trim().charAt(0).toUpperCase()}
                     </span>
                     <span className="hidden min-w-0 leading-tight sm:block">
                       <span className="block max-w-[10rem] truncate text-sm font-medium">{me.profile.full_name}</span>
-                      <span className="block text-xs text-ink/60">{me.profile.role === 'admin' ? 'Admin' : 'Peserta'}</span>
+                      <span className="block max-w-[10rem] truncate text-xs text-ink/60">{me.profile.role === 'admin' ? 'Admin' : me.profile.instansi_name ? `Tujuan ${me.profile.instansi_name}` : 'Peserta'}</span>
                     </span>
-                  </div>
+                  </Link>
                   <button onClick={logout} aria-label="Keluar" className="flex h-11 w-11 items-center justify-center rounded-full border border-ink bg-white transition hover:bg-ink/5 md:hidden">
                     <Icon name="logout" className="h-5 w-5" />
                   </button>

@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { useMe, loadMe } from '@/lib/useMe';
 import { toast, confirmBox } from '@/lib/dialog';
 import { Sk } from '@/components/Skeleton';
+import InstansiPicker from '@/components/InstansiPicker';
 
 const BLANK_PW = { lama: '', baru: '', ulang: '' };
 
@@ -98,10 +99,7 @@ export default function Profil() {
           </div>
           <div>
             <label className="label">Instansi tujuan</label>
-            <select className="input" value={f.instansi_id} onChange={(e) => setF({ ...f, instansi_id: e.target.value })}>
-              <option value="">Belum dipilih</option>
-              {instansi.map((i) => <option key={i.id} value={i.id}>{i.name}</option>)}
-            </select>
+            <InstansiPicker id="instansi" value={f.instansi_id} options={instansi} onChange={(v) => setF({ ...f, instansi_id: v })} emptyLabel="Belum dipilih" />
             <p className="mt-1 text-xs text-ink/60">Dipakai untuk ranking per instansi. Instansi yang belum ada bisa diminta ke admin.</p>
           </div>
           <div>
